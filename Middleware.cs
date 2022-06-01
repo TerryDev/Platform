@@ -1,9 +1,15 @@
-﻿namespace Platform
+﻿using Microsoft.Extensions.Options;
+
+namespace Platform
 {
     public class QueryStringMiddleware
     {
-        private RequestDelegate next;
+        private RequestDelegate? next;
 
+        public QueryStringMiddleware()
+        {
+            //Do nothing.
+        }
         public QueryStringMiddleware(RequestDelegate nextDelegate)
         {
             next = nextDelegate;
@@ -19,7 +25,36 @@
                 }
                 await context.Response.WriteAsync("Class based middleware\n");
             }
-            await next(context);
+
+            if (next != null)
+            {
+                await next(context);
+            }
+        }
+        
+    }
+
+    public class LocationMiddleware
+    {
+        private RequestDelegate next;
+        private MessageOptions options;
+
+        public LocationMiddleware(RequestDelegate next, IOptions<MessageOptions> options)
+        {
+            this.next = next;
+            this.options = options.Value;
+        }
+
+        public async Task Invoke(HttpContext context)
+        {
+            if (context.Request.Path == "/location")
+            {
+                await context.Response.WriteAsync($"{options.CityName}, {options.CountryName}");
+            }
+            else
+            {
+                await next(context);
+            }
         }
     }
 }

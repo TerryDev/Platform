@@ -1,5 +1,22 @@
+using Microsoft.Extensions.Options;
+using Platform;
+
 var builder = WebApplication.CreateBuilder(args);
+
+builder.Services.Configure<MessageOptions>(options =>
+{
+    options.CityName = "Edmonton";
+    options.CountryName = "Canada";
+});
+
 var app = builder.Build();
+
+//app.MapGet("/location", async (HttpContext context, IOptions<MessageOptions> msgOpts) =>
+//{
+//    Platform.MessageOptions opts = msgOpts.Value;
+//    await context.Response.WriteAsync($"{opts.CityName}, {opts.CountryName}");
+//});
+app.UseMiddleware<LocationMiddleware>();
 
 app.MapGet("/", () => "Hello World!");
 
@@ -33,12 +50,7 @@ app.Use(async (ctx, req) =>
 
 ((IApplicationBuilder) app).Map("/branch", branch =>
 {
-    branch.UseMiddleware<Platform.QueryStringMiddleware>();
-
-    branch.Use(async (HttpContext context, Func<Task> next) =>
-    {
-        await context.Response.WriteAsync("Branch middleware");
-    });
+    branch.Run(new Platform.QueryStringMiddleware().Invoke);
 });
 
 app.UseMiddleware<Platform.QueryStringMiddleware>();
