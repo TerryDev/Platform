@@ -11,6 +11,39 @@ builder.Services.Configure<MessageOptions>(options =>
 
 var app = builder.Build();
 
+//app.UseMiddleware<Population>();
+//app.UseMiddleware<Capital>();
+
+app.MapGet("{first}/{second}/{third}", async context =>
+{
+    await context.Response.WriteAsync("Request was routed:\n");
+    foreach (var kvp in context.Request.RouteValues)
+    {
+        await context.Response.WriteAsync($"{kvp.Key}: {kvp.Value}\n");
+    }
+});
+app.MapGet("bruh/{item}", Population.NewEndpoint);
+
+app.MapGet("capital/{country}", Capital.Endpoint);
+app.MapGet("population/{city}", Population.Endpoint);
+
+app.UseRouting();
+
+app.UseEndpoints(endpoints =>
+{
+    endpoints.MapGet("routing", async context =>
+    {
+        await context.Response.WriteAsync("Request was routed");
+    });
+    endpoints.MapGet("capital/uk", new Capital().Invoke);
+    endpoints.MapGet("population/paris", new Population().Invoke);  
+});
+
+app.Run(async (context) =>
+{
+    await context.Response.WriteAsync("Terminal Middleware reached");
+});
+
 //app.MapGet("/location", async (HttpContext context, IOptions<MessageOptions> msgOpts) =>
 //{
 //    Platform.MessageOptions opts = msgOpts.Value;
