@@ -1,5 +1,6 @@
 using Microsoft.Extensions.Options;
 using Platform;
+using Platform.Services;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -9,10 +10,33 @@ builder.Services.Configure<MessageOptions>(options =>
     options.CountryName = "Canada";
 });
 
+builder.Services.AddSingleton<IResponseFormatter, HtmlResponseFormatter>();
+
 var app = builder.Build();
 
 //app.UseMiddleware<Population>();
 //app.UseMiddleware<Capital>();
+
+app.UseMiddleware<WeatherMiddleware>();
+
+
+IResponseFormatter formatter = new TextResponseFormatter();
+app.MapGet("middleware/function", async (HttpContext context, IResponseFormatter formatter) =>
+{
+    await formatter.Format(context, "Middleware function: it is sunny in Jasper");
+    //await TextResponseFormatter.Singleton.Format(context, "Middleware function: it is sunny in Jasper");
+    //await formatter.Format(context, "Middleware function: it is sunny in Jasper");
+});
+
+//app.MapGet("endpoint/class", WeatherEndpoint.Endpoint);
+//app.MapWeather("endpoint/class");
+app.MapEndpoint<WeatherEndpoint>("endpoint/class");
+
+app.MapGet("endpoint/function", async (HttpContext context, IResponseFormatter formatter) =>
+{
+    //await context.Response.WriteAsync("Endpoint function: It is sunny in Red Deer");
+    await formatter.Format(context, "Endpoint Function: it is sunny in Red Deer");
+});
 
 app.MapGet("{first}/{second}/{third}", async context =>
 {
@@ -25,7 +49,8 @@ app.MapGet("{first}/{second}/{third}", async context =>
 app.MapGet("bruh/{item}", Population.NewEndpoint);
 
 app.MapGet("capital/{country}", Capital.Endpoint);
-app.MapGet("population/{city}", Population.Endpoint);
+app.MapGet("size/{city}", Population.Endpoint)
+    .WithMetadata(new RouteNameMetadata("population"));
 
 app.UseRouting();
 
