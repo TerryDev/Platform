@@ -4,13 +4,14 @@ using Platform.Services;
 
 var builder = WebApplication.CreateBuilder(args);
 
+builder.Services.AddTransient<IResponseFormatter, GuidService>();
+
 builder.Services.Configure<MessageOptions>(options =>
 {
     options.CityName = "Edmonton";
     options.CountryName = "Canada";
 });
 
-builder.Services.AddSingleton<IResponseFormatter, HtmlResponseFormatter>();
 
 var app = builder.Build();
 
