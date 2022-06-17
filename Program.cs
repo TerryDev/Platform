@@ -4,7 +4,8 @@ using Platform.Services;
 
 var builder = WebApplication.CreateBuilder(args);
 
-builder.Services.AddTransient<IResponseFormatter, GuidService>();
+//builder.Services.AddTransient<IResponseFormatter, GuidService>();
+builder.Services.AddScoped<IResponseFormatter, GuidService>();
 
 builder.Services.Configure<MessageOptions>(options =>
 {
@@ -33,8 +34,9 @@ app.MapGet("middleware/function", async (HttpContext context, IResponseFormatter
 //app.MapWeather("endpoint/class");
 app.MapEndpoint<WeatherEndpoint>("endpoint/class");
 
-app.MapGet("endpoint/function", async (HttpContext context, IResponseFormatter formatter) =>
+app.MapGet("endpoint/function", async (HttpContext context) =>
 {
+    IResponseFormatter formatter = context.RequestServices.GetRequiredService<IResponseFormatter>();
     //await context.Response.WriteAsync("Endpoint function: It is sunny in Red Deer");
     await formatter.Format(context, "Endpoint Function: it is sunny in Red Deer");
 });

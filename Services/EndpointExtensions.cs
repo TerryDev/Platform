@@ -16,10 +16,15 @@ public static class EndpointExtensions
 
         ParameterInfo[] methodParams = methodInfo!.GetParameters();
 
-        app.MapGet(path, context => (Task) (methodInfo.Invoke(endpointInstance,
-            methodParams.Select(p =>
-                    p.ParameterType == typeof(HttpContext) ? context : app.ServiceProvider.GetService(p.ParameterType))
-                .ToArray()))!);
+        app.MapGet(path, context =>
+        {
+            T endpointInstance = ActivatorUtilities.CreateInstance<T>(context.RequestServices);
+            return (Task) methodInfo.Invoke(endpointInstance!,
+                methodParams.Select(p =>
+                    p.ParameterType == typeof(HttpContext)
+                        ? context
+                        : context.RequestServices.GetService(p.ParameterType)).ToArray())!;
+        });
     }
     
 }
